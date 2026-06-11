@@ -15,8 +15,6 @@ flowchart TD
 
     S[Sparse Retrieval<br/>BM25 Keyword Search<br/>Top-20]
 
-    M[MMR Retrieval<br/>ChromaDB MMR Search<br/>Top-20]
-
     R[RRF Fusion<br/>Reciprocal Rank Fusion<br/>k = 60]
 
     F[MMR Diversification<br/>Select Top-8 Diverse Chunks]
@@ -29,11 +27,9 @@ flowchart TD
 
     Q --> D
     Q --> S
-    Q --> M
 
     D --> R
     S --> R
-    M --> R
 
     R --> F
     F --> C
