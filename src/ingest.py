@@ -1,5 +1,7 @@
+import logging
 import os
 from langchain_core.documents import Document
+from langchain_core.embeddings import Embeddings
 from langchain_community.document_loaders import (
     PyPDFDirectoryLoader,
     DirectoryLoader,
@@ -7,6 +9,8 @@ from langchain_community.document_loaders import (
 )
 from langchain_chroma import Chroma
 from src.chunking import split_documents
+
+logger = logging.getLogger(__name__)
 
 
 def load_documents(docs_dir: str) -> list[Document]:
@@ -19,8 +23,8 @@ def load_documents(docs_dir: str) -> list[Document]:
     pdf_loader = PyPDFDirectoryLoader(docs_dir, silent_errors=True)
     try:
         documents.extend(pdf_loader.load())
-    except Exception:
-        pass
+    except Exception as e:
+        logger.warning("PDF loader failed for %s: %s", docs_dir, e)
 
     txt_loader = DirectoryLoader(
         docs_dir,
@@ -31,8 +35,8 @@ def load_documents(docs_dir: str) -> list[Document]:
     )
     try:
         documents.extend(txt_loader.load())
-    except Exception:
-        pass
+    except Exception as e:
+        logger.warning("TXT loader failed for %s: %s", docs_dir, e)
 
     return documents
 
@@ -40,12 +44,14 @@ def load_documents(docs_dir: str) -> list[Document]:
 def build_vector_store(
     documents: list[Document],
     persist_dir: str,
-    embedding_model,
+    embedding_model: Embeddings,
     chunk_size: int = 1000,
     chunk_overlap: int = 200,
 ) -> Chroma:
     """Chunk documents, embed, and persist to ChromaDB."""
     chunks = split_documents(documents, chunk_size=chunk_size, chunk_overlap=chunk_overlap)
+    if not chunks:
+        raise ValueError("No chunks to index — documents list is empty or all documents are empty.")
     store = Chroma.from_documents(
         documents=chunks,
         embedding=embedding_model,
