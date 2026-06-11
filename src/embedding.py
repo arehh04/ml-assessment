@@ -1,4 +1,3 @@
-# src/embedding.py — minimal stub for Task 3 tests, will be fully implemented in Task 4
 from functools import lru_cache
 from langchain_huggingface import HuggingFaceEmbeddings
 
