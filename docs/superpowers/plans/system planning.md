@@ -1,7 +1,5 @@
 # RAG System Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
-
 **Goal:** Build a RAG system over an AI governance document corpus that retrieves relevant chunks via hybrid retrieval (dense + sparse + MMR), fuses results with RRF, and generates grounded, source-cited answers using Gemini 2.5 Flash.
 
 **Architecture:** Documents are loaded from `data/documents/`, chunked at 1000 chars with 200 overlap, embedded with `all-MiniLM-L6-v2`, and persisted in ChromaDB. At query time, three retrievers (dense similarity, BM25 sparse, ChromaDB MMR) each return top-20 candidates; RRF fuses the ranked lists into a single scored set; a custom MMR pass selects 8 diverse top chunks; Gemini 2.5 Flash generates a grounded answer constrained to retrieved context with source citations.
@@ -12,39 +10,40 @@
 
 ## File Map
 
-| File | Responsibility |
-|------|---------------|
-| `requirements.txt` | All dependencies pinned |
-| `.env.example` | Environment variable template |
-| `pytest.ini` | Test configuration |
-| `tests/conftest.py` | Shared test fixtures (sample docs, tmp chroma dir) |
-| `src/__init__.py` | Package marker |
-| `tests/__init__.py` | Package marker |
-| `src/chunking.py` | `split_documents()` — wraps RecursiveCharacterTextSplitter |
-| `src/ingest.py` | `load_documents()`, `build_vector_store()` — load PDFs, chunk, embed, persist |
-| `src/embedding.py` | `get_embedding_model()` — HuggingFace embeddings factory |
-| `src/vector_store.py` | `get_or_create_store()`, `get_all_documents()` — ChromaDB CRUD |
-| `src/retriever.py` | `dense_retrieve()`, `sparse_retrieve()`, `mmr_retrieve()` |
-| `src/fusion.py` | `reciprocal_rank_fusion()`, `apply_mmr()` |
-| `src/prompt.py` | `build_prompt()` — returns ChatPromptTemplate |
-| `src/qa.py` | `answer_question()` — orchestrates retrieval → fusion → generation |
-| `src/main.py` | CLI entrypoint: `python src/main.py --query "..."` |
-| `scripts/download_data.py` | Downloads Kaggle dataset to `data/documents/` |
-| `tests/test_chunking.py` | Unit tests for chunking |
-| `tests/test_ingest.py` | Unit tests for document loading |
-| `tests/test_embedding.py` | Unit tests for embedding model |
-| `tests/test_vector_store.py` | Unit tests for ChromaDB operations |
-| `tests/test_retriever.py` | Unit tests for all three retrievers |
-| `tests/test_fusion.py` | Unit tests for RRF and MMR |
-| `tests/test_prompt.py` | Unit tests for prompt formatting |
-| `tests/test_qa.py` | Unit tests for QA chain (mocked LLM) |
-| `tests/test_integration.py` | End-to-end test (requires API key + documents) |
+| File                         | Responsibility                                                                |
+| ---------------------------- | ----------------------------------------------------------------------------- |
+| `requirements.txt`           | All dependencies pinned                                                       |
+| `.env.example`               | Environment variable template                                                 |
+| `pytest.ini`                 | Test configuration                                                            |
+| `tests/conftest.py`          | Shared test fixtures (sample docs, tmp chroma dir)                            |
+| `src/__init__.py`            | Package marker                                                                |
+| `tests/__init__.py`          | Package marker                                                                |
+| `src/chunking.py`            | `split_documents()` — wraps RecursiveCharacterTextSplitter                    |
+| `src/ingest.py`              | `load_documents()`, `build_vector_store()` — load PDFs, chunk, embed, persist |
+| `src/embedding.py`           | `get_embedding_model()` — HuggingFace embeddings factory                      |
+| `src/vector_store.py`        | `get_or_create_store()`, `get_all_documents()` — ChromaDB CRUD                |
+| `src/retriever.py`           | `dense_retrieve()`, `sparse_retrieve()`, `mmr_retrieve()`                     |
+| `src/fusion.py`              | `reciprocal_rank_fusion()`, `apply_mmr()`                                     |
+| `src/prompt.py`              | `build_prompt()` — returns ChatPromptTemplate                                 |
+| `src/qa.py`                  | `answer_question()` — orchestrates retrieval → fusion → generation            |
+| `src/main.py`                | CLI entrypoint: `python src/main.py --query "..."`                            |
+| `scripts/download_data.py`   | Downloads Kaggle dataset to `data/documents/`                                 |
+| `tests/test_chunking.py`     | Unit tests for chunking                                                       |
+| `tests/test_ingest.py`       | Unit tests for document loading                                               |
+| `tests/test_embedding.py`    | Unit tests for embedding model                                                |
+| `tests/test_vector_store.py` | Unit tests for ChromaDB operations                                            |
+| `tests/test_retriever.py`    | Unit tests for all three retrievers                                           |
+| `tests/test_fusion.py`       | Unit tests for RRF and MMR                                                    |
+| `tests/test_prompt.py`       | Unit tests for prompt formatting                                              |
+| `tests/test_qa.py`           | Unit tests for QA chain (mocked LLM)                                          |
+| `tests/test_integration.py`  | End-to-end test (requires API key + documents)                                |
 
 ---
 
 ## Task 1: Project Setup & Environment
 
 **Files:**
+
 - Create: `requirements.txt`
 - Create: `.env.example`
 - Create: `pytest.ini`
@@ -168,6 +167,7 @@ git commit -m "feat: project setup — deps, env template, pytest config, fixtur
 ## Task 2: Chunking Module
 
 **Files:**
+
 - Create: `src/chunking.py`
 - Create: `tests/test_chunking.py`
 
@@ -261,6 +261,7 @@ git commit -m "feat: chunking module with RecursiveCharacterTextSplitter"
 ## Task 3: Document Loader & Ingestion Pipeline
 
 **Files:**
+
 - Create: `src/ingest.py`
 - Create: `tests/test_ingest.py`
 
@@ -395,6 +396,7 @@ git commit -m "feat: document loader and ingestion pipeline (PDF + TXT → Chrom
 ## Task 4: Embedding Module
 
 **Files:**
+
 - Create: `src/embedding.py`
 - Create: `tests/test_embedding.py`
 
@@ -494,6 +496,7 @@ git commit -m "feat: embedding module wrapping HuggingFace all-MiniLM-L6-v2"
 ## Task 5: Vector Store (ChromaDB)
 
 **Files:**
+
 - Create: `src/vector_store.py`
 - Create: `tests/test_vector_store.py`
 
@@ -611,6 +614,7 @@ git commit -m "feat: ChromaDB vector store helpers (create, load, fetch all docs
 ## Task 6: Retrieval (Dense, Sparse, MMR)
 
 **Files:**
+
 - Create: `src/retriever.py`
 - Create: `tests/test_retriever.py`
 
@@ -753,6 +757,7 @@ git commit -m "feat: dense, BM25 sparse, and MMR retrievers"
 ## Task 7: RRF Fusion
 
 **Files:**
+
 - Create: `src/fusion.py` (RRF only in this task)
 - Create: `tests/test_fusion.py` (RRF tests only)
 
@@ -887,6 +892,7 @@ git commit -m "feat: Reciprocal Rank Fusion (k=60) for hybrid retrieval"
 ## Task 8: MMR Diversification
 
 **Files:**
+
 - Modify: `src/fusion.py` (add `apply_mmr`)
 - Modify: `tests/test_fusion.py` (add MMR tests)
 
@@ -1030,6 +1036,7 @@ git commit -m "feat: MMR diversification post-RRF for diverse context selection"
 ## Task 9: Prompt Template
 
 **Files:**
+
 - Create: `src/prompt.py`
 - Create: `tests/test_prompt.py`
 
@@ -1160,6 +1167,7 @@ git commit -m "feat: prompt template with source citation formatting"
 ## Task 10: QA Chain & Answer Generation
 
 **Files:**
+
 - Create: `src/qa.py`
 - Create: `tests/test_qa.py`
 
@@ -1315,6 +1323,7 @@ git commit -m "feat: QA chain — grounded answer generation with source attribu
 ## Task 11: Main CLI
 
 **Files:**
+
 - Create: `src/main.py`
 
 This is the orchestration layer. No new tests (covered by integration test in Task 12).
@@ -1428,6 +1437,7 @@ python src/main.py --help
 ```
 
 Expected output:
+
 ```
 usage: main.py [-h] [--query QUERY] [--ingest] [--top-k TOP_K]
 
@@ -1452,6 +1462,7 @@ git commit -m "feat: CLI entrypoint — ingest and query commands"
 ## Task 12: Dataset Download & Integration Test
 
 **Files:**
+
 - Create: `scripts/download_data.py`
 - Create: `tests/test_integration.py`
 
@@ -1510,6 +1521,7 @@ python scripts/download_data.py
 Expected: Files appear in `data/documents/`. If Kaggle credentials aren't configured, follow the printed instructions.
 
 After download, verify:
+
 ```bash
 ls data/documents/
 ```
@@ -1523,6 +1535,7 @@ python src/main.py --ingest
 ```
 
 Expected output:
+
 ```
 Loading documents from ./data/documents...
 Loaded N pages. Chunking and indexing...
@@ -1681,28 +1694,29 @@ git commit -m "feat: dataset download script and end-to-end integration tests"
 
 **Spec Coverage Check:**
 
-| Requirement | Covered by |
-|-------------|-----------|
-| Document ingestion | Task 3 (`ingest.py`) |
-| Parsing and chunking | Task 2 (`chunking.py`) |
-| Generate embeddings | Task 4 (`embedding.py`) |
-| Store searchable representations | Task 5 (`vector_store.py`) |
-| Dense retrieval (top-20) | Task 6 (`retriever.py`) |
-| Sparse retrieval (top-20) | Task 6 (`retriever.py`, BM25) |
-| RRF fusion | Task 7 (`fusion.py`) |
-| MMR diversification (k=8) | Task 8 (`fusion.py`) |
-| Grounded answer generation | Task 10 (`qa.py`) |
-| Source attribution | Task 10 (`qa.py`, `format_sources`) |
-| Temperature=0 | Task 11 (`main.py`, `_get_llm`) |
-| Fallback "cannot find evidence" | Task 9 (`prompt.py`, system template) |
-| ChromaDB persistence | Task 5 (`vector_store.py`, `persist_directory`) |
-| CLI interface | Task 11 (`main.py`) |
-| Kaggle dataset download | Task 12 (`scripts/download_data.py`) |
-| Multi-vector retrieval | Covered via three retrievers (dense + sparse + MMR) fused with RRF |
+| Requirement                      | Covered by                                                         |
+| -------------------------------- | ------------------------------------------------------------------ |
+| Document ingestion               | Task 3 (`ingest.py`)                                               |
+| Parsing and chunking             | Task 2 (`chunking.py`)                                             |
+| Generate embeddings              | Task 4 (`embedding.py`)                                            |
+| Store searchable representations | Task 5 (`vector_store.py`)                                         |
+| Dense retrieval (top-20)         | Task 6 (`retriever.py`)                                            |
+| Sparse retrieval (top-20)        | Task 6 (`retriever.py`, BM25)                                      |
+| RRF fusion                       | Task 7 (`fusion.py`)                                               |
+| MMR diversification (k=8)        | Task 8 (`fusion.py`)                                               |
+| Grounded answer generation       | Task 10 (`qa.py`)                                                  |
+| Source attribution               | Task 10 (`qa.py`, `format_sources`)                                |
+| Temperature=0                    | Task 11 (`main.py`, `_get_llm`)                                    |
+| Fallback "cannot find evidence"  | Task 9 (`prompt.py`, system template)                              |
+| ChromaDB persistence             | Task 5 (`vector_store.py`, `persist_directory`)                    |
+| CLI interface                    | Task 11 (`main.py`)                                                |
+| Kaggle dataset download          | Task 12 (`scripts/download_data.py`)                               |
+| Multi-vector retrieval           | Covered via three retrievers (dense + sparse + MMR) fused with RRF |
 
 **Placeholder Scan:** None found — all steps have complete code.
 
 **Type Consistency Check:**
+
 - `split_documents()` → `list[Document]` ✓ used in `ingest.py`
 - `get_embedding_model()` → `HuggingFaceEmbeddings` ✓ used in all retriever/fusion calls
 - `dense_retrieve()` → `list[Document]` ✓ fed into `reciprocal_rank_fusion()`
