@@ -80,3 +80,12 @@ def test_format_sources():
 def test_answer_question_calls_llm(mock_llm, retrieved_docs):
     answer_question("test query", retrieved_docs, mock_llm)
     assert mock_llm.invoke.called
+
+
+def test_format_sources_missing_metadata():
+    docs = [Document(page_content="Content with no metadata.", metadata={})]
+    sources = format_sources(docs)
+    assert len(sources) == 1
+    assert sources[0]["source"] == "Unknown"
+    assert sources[0]["page"] is None
+    assert sources[0]["content"] == "Content with no metadata."
