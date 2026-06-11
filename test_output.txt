@@ -1,0 +1,15 @@
+============================= test session starts =============================
+platform win32 -- Python 3.13.7, pytest-9.0.3, pluggy-1.6.0 -- C:\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\HP\Desktop\ml-assessment
+configfile: pytest.ini
+plugins: anyio-4.10.0, Faker-40.15.0, langsmith-0.7.32, mock-3.15.1
+collecting ... collected 2 items
+
+tests/test_integration.py::test_full_pipeline_retrieval SKIPPED          [ 50%]
+tests/test_integration.py::test_full_pipeline_with_llm SKIPPED           [100%]
+
+=========================== short test summary info ===========================
+SKIPPED [1] tests\test_integration.py:27: data/documents is empty — run scripts/download_data.py first
+SKIPPED [1] tests\test_integration.py:65: GOOGLE_API_KEY not set
+============================= 2 skipped in 18.79s =============================
