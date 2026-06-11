@@ -6,28 +6,62 @@ A Retrieval-Augmented Generation (RAG) system that answers questions over a corp
 
 ## How It Works
 
-```
-Query
-  │
-  ├── Dense Retrieval (ChromaDB similarity search, top-20)
-  ├── Sparse Retrieval (BM25 keyword search, top-20)
-  └── MMR Retrieval (ChromaDB max-marginal-relevance, top-20)
-        │
-        ▼
-   RRF Fusion (Reciprocal Rank Fusion, k=60)
-        │
-        ▼
-   MMR Diversification (select 8 diverse chunks)
-        │
-        ▼
-   Gemini 2.5 Flash (temperature=0, context-only prompt)
-        │
-        ▼
-   Grounded Answer + Source Citations
+```mermaid
+flowchart TD
+
+    Q[User Query]
+
+    D[Dense Retrieval<br/>ChromaDB Similarity Search<br/>Top-20]
+
+    S[Sparse Retrieval<br/>BM25 Keyword Search<br/>Top-20]
+
+    M[MMR Retrieval<br/>ChromaDB MMR Search<br/>Top-20]
+
+    R[RRF Fusion<br/>Reciprocal Rank Fusion<br/>k = 60]
+
+    F[MMR Diversification<br/>Select Top-8 Diverse Chunks]
+
+    C[Context Assembly]
+
+    L[Gemini 2.5 Flash<br/>Temperature = 0<br/>Context-Only Prompt]
+
+    A[Grounded Answer<br/>+<br/>Source Citations]
+
+    Q --> D
+    Q --> S
+    Q --> M
+
+    D --> R
+    S --> R
+    M --> R
+
+    R --> F
+    F --> C
+    C --> L
+    L --> A
 ```
 
 **Ingestion pipeline:**
-Documents → RecursiveCharacterTextSplitter (1000 chars / 200 overlap) → all-MiniLM-L6-v2 embeddings → ChromaDB
+
+```mermaid
+flowchart LR
+
+    D[Documents]
+
+    C[RecursiveCharacterTextSplitter
+    Chunk Size = 1000
+    Overlap = 200]
+
+    E[all-MiniLM-L6-v2
+    Embeddings]
+
+    V[ChromaDB
+    Vector Store]
+
+    D --> C
+    C --> E
+    E --> V
+```
 
 ---
 
@@ -119,9 +153,10 @@ pytest tests/test_integration.py -m integration    # end-to-end, requires datase
 
 ---
 
-## Example Queries
+## Test Queries
 
 **Query 1: Core topic**
+
 ```
 $ python src/main.py --query "What are the key principles of AI governance?"
 
@@ -150,6 +185,7 @@ Sources:
 ```
 
 **Query 2: Specific policy domain**
+
 ```
 $ python src/main.py --query "How should the Department of Defense govern AI systems?"
 
@@ -177,6 +213,7 @@ Sources:
 ```
 
 **Query 3: Out-of-corpus question (hallucination mitigation)**
+
 ```
 $ python src/main.py --query "What does GDPR say about automated decision making?"
 
@@ -188,9 +225,10 @@ The corpus covers US federal AI policy and OECD principles — GDPR is not repre
 
 ---
 
-## What I Would Do Next
+## Future Works
 
 Given more time:
+
 1. **Cross-encoder reranker** (bge-reranker-base) applied after RRF for better precision
 2. **Query rewriting** to decompose multi-hop questions before retrieval
 3. **Evaluation pipeline** — Recall@K, MRR, and faithfulness scoring against ground truth
