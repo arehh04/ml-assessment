@@ -59,3 +59,58 @@ def test_rrf_empty_input():
 def test_rrf_preserves_all_unique_docs(doc_a, doc_b, doc_c, doc_d):
     result = reciprocal_rank_fusion([[doc_a, doc_b], [doc_c, doc_d]])
     assert len(result) == 4
+
+
+from src.fusion import apply_mmr
+from src.embedding import get_embedding_model
+
+
+@pytest.fixture
+def embedding_model():
+    return get_embedding_model()
+
+
+@pytest.fixture
+def diverse_documents():
+    return [
+        Document(page_content="AI governance frameworks establish accountability.", metadata={"source": "a.pdf"}),
+        Document(page_content="AI governance policies define oversight roles.", metadata={"source": "b.pdf"}),
+        Document(page_content="GDPR requires data minimization and user consent.", metadata={"source": "c.pdf"}),
+        Document(page_content="Machine learning bias can harm marginalized groups.", metadata={"source": "d.pdf"}),
+        Document(page_content="AI governance accountability is central to ethics.", metadata={"source": "e.pdf"}),
+        Document(page_content="Quantum computing will reshape cryptography.", metadata={"source": "f.pdf"}),
+    ]
+
+
+def test_apply_mmr_returns_k_documents(diverse_documents, embedding_model):
+    result = apply_mmr("AI governance", diverse_documents, embedding_model, k=3)
+    assert len(result) == 3
+    assert all(isinstance(d, Document) for d in result)
+
+
+def test_apply_mmr_no_duplicates(diverse_documents, embedding_model):
+    result = apply_mmr("AI governance", diverse_documents, embedding_model, k=4)
+    contents = [d.page_content for d in result]
+    assert len(contents) == len(set(contents))
+
+
+def test_apply_mmr_k_larger_than_candidates(diverse_documents, embedding_model):
+    result = apply_mmr("AI governance", diverse_documents[:2], embedding_model, k=10)
+    assert len(result) == 2  # capped at available candidates
+
+
+def test_apply_mmr_empty_candidates(embedding_model):
+    result = apply_mmr("query", [], embedding_model, k=5)
+    assert result == []
+
+
+def test_apply_mmr_selects_diverse_results(diverse_documents, embedding_model):
+    # docs[0] and docs[4] are semantically near-identical (both "AI governance ... accountab...")
+    # MMR with lambda_mult=0.3 should select at most 1 of these near-identical docs
+    result = apply_mmr("AI governance accountability", diverse_documents, embedding_model, k=3, lambda_mult=0.3)
+    selected_contents = [d.page_content for d in result]
+    near_identical_count = sum(
+        1 for c in selected_contents
+        if "AI governance" in c and "accountab" in c.lower()
+    )
+    assert near_identical_count <= 1
