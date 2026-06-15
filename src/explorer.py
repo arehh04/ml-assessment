@@ -9,7 +9,7 @@ from src.prompt import build_prompt, format_context
 FALLBACK_PHRASE = "cannot find sufficient evidence"
 
 
-def bm25_fast_path(question: str, doc_filename: str, all_docs: list, llm) -> dict:
+def bm25_fast_path(question: str, doc_filename: str, all_docs: list[Document], llm) -> dict:
     doc_chunks = [
         d for d in all_docs
         if os.path.basename(d.metadata.get("source", "")) == doc_filename
@@ -24,10 +24,10 @@ def bm25_fast_path(question: str, doc_filename: str, all_docs: list, llm) -> dic
 def full_pipeline_retrieve(
     question: str,
     store,
-    all_docs: list,
+    all_docs: list[Document],
     embedding_model,
     k: int = 8,
-) -> list:
+) -> list[Document]:
     dense_results  = dense_retrieve(store, question, k=20)
     sparse_results = sparse_retrieve(all_docs, question, k=20)
     mmr_results    = mmr_retrieve(store, question, k=20, fetch_k=60)
@@ -35,7 +35,7 @@ def full_pipeline_retrieve(
     return apply_mmr(question, fused, embedding_model, k=k)
 
 
-def stream_answer(question: str, docs: list, llm):
+def stream_answer(question: str, docs: list[Document], llm):
     prompt = build_prompt()
     context = format_context(docs)
     messages = prompt.format_messages(context=context, question=question)
