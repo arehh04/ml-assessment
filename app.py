@@ -111,3 +111,35 @@ with left_col:
 with right_col:
     if not explore:
         st.info("Select a document on the left and click **Explore →** to begin.")
+    else:
+        # Build card layout — 3 cards with updateable slots
+        badge_slots = []
+        preview_slots = []
+        full_slots = []
+        source_slots = []
+
+        for i, question in enumerate(QUESTION_TEMPLATES):
+            with st.container(border=True):
+                st.markdown(f"**Q{i+1}:** {question}")
+                badge_slots.append(st.empty())
+                preview_slots.append(st.empty())
+                full_slots.append(st.empty())
+                source_slots.append(st.empty())
+
+        # ── Phase 1: parallel BM25 fast path ─────────────────────────────────
+        for slot in badge_slots:
+            slot.markdown("⏳ Retrieving BM25 preview…")
+
+        with ThreadPoolExecutor(max_workers=3) as ex:
+            bm25_futures = {
+                ex.submit(bm25_fast_path, q, selected_doc, all_docs, llm): i
+                for i, q in enumerate(QUESTION_TEMPLATES)
+            }
+            bm25_results = [None, None, None]
+            for future in as_completed(bm25_futures):
+                idx = bm25_futures[future]
+                bm25_results[idx] = future.result()
+
+        for i, res in enumerate(bm25_results):
+            badge_slots[i].markdown("⚡ **BM25 preview**")
+            preview_slots[i].markdown(res["answer"])
