@@ -111,17 +111,14 @@ def test_full_pipeline_retrieve_returns_list(sample_docs):
 def test_stream_answer_yields_content_from_llm_chunks(sample_docs):
     from src.explorer import stream_answer
     chunk1 = MagicMock()
-    chunk1.content = "The "
+    chunk1.text = "The "
     chunk2 = MagicMock()
-    chunk2.content = "answer."
+    chunk2.text = "answer."
     mock_llm = MagicMock()
-    mock_llm.stream.return_value = iter([chunk1, chunk2])
+    mock_llm.generate_content_stream.return_value = iter([chunk1, chunk2])
 
-    mock_template = MagicMock()
-    mock_template.format_messages.return_value = [MagicMock()]
-
-    with patch("src.explorer.build_prompt", return_value=mock_template), \
-         patch("src.explorer.format_context", return_value="Some context."):
+    with patch("src.explorer.format_context", return_value="Some context."), \
+         patch("src.explorer.format_prompt", return_value="mock prompt"):
         result = list(stream_answer("What?", sample_docs, mock_llm))
 
     assert result == ["The ", "answer."]
@@ -130,14 +127,10 @@ def test_stream_answer_yields_content_from_llm_chunks(sample_docs):
 def test_stream_answer_passes_question_to_prompt(sample_docs):
     from src.explorer import stream_answer
     mock_llm = MagicMock()
-    mock_llm.stream.return_value = iter([])
-    mock_template = MagicMock()
-    mock_template.format_messages.return_value = []
+    mock_llm.generate_content_stream.return_value = iter([])
 
-    with patch("src.explorer.build_prompt", return_value=mock_template), \
-         patch("src.explorer.format_context", return_value="ctx"):
+    with patch("src.explorer.format_context", return_value="ctx"), \
+         patch("src.explorer.format_prompt", return_value="built prompt") as mock_format:
         list(stream_answer("My question?", sample_docs, mock_llm))
 
-    mock_template.format_messages.assert_called_once_with(
-        context="ctx", question="My question?"
-    )
+    mock_format.assert_called_once_with("ctx", "My question?")

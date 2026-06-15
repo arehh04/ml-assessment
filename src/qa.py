@@ -1,6 +1,5 @@
 from langchain_core.documents import Document
-from langchain_core.messages import BaseMessage
-from src.prompt import build_prompt, format_context
+from src.prompt import format_context, format_prompt
 
 
 def format_sources(documents: list[Document]) -> list[dict]:
@@ -19,13 +18,11 @@ def answer_question(
     retrieved_docs: list[Document],
     llm,
 ) -> dict:
-    """Generate a grounded answer from retrieved documents using the LLM."""
-    prompt = build_prompt()
     context = format_context(retrieved_docs)
-    messages = prompt.format_messages(context=context, question=query)
-    response: BaseMessage = llm.invoke(messages)
+    prompt_text = format_prompt(context, query)
+    response = llm.generate_content(prompt_text)
     return {
         "query": query,
-        "answer": response.content,
+        "answer": response.text,
         "sources": format_sources(retrieved_docs),
     }

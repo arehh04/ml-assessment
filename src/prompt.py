@@ -24,6 +24,10 @@ def build_prompt() -> ChatPromptTemplate:
     )
 
 
+def format_prompt(context: str, question: str) -> str:
+    return _SYSTEM_TEMPLATE.format(context=context) + "\n\n" + _HUMAN_TEMPLATE.format(question=question)
+
+
 def format_context(documents: list[Document]) -> str:
     """Format retrieved documents into a numbered context block with source citations."""
     parts = []

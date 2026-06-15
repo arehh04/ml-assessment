@@ -54,17 +54,37 @@ def load_store(_embedding_model):
     return get_or_create_store(chroma_dir, _embedding_model)
 
 
+class _GeminiClient:
+    """Thin wrapper around google-genai client."""
+    def __init__(self, client, model: str):
+        self._client = client
+        self._model = model
+
+    def generate_content(self, prompt: str):
+        from google.genai import types
+        return self._client.models.generate_content(
+            model=self._model,
+            contents=prompt,
+            config=types.GenerateContentConfig(temperature=0),
+        )
+
+    def generate_content_stream(self, prompt: str):
+        from google.genai import types
+        return self._client.models.generate_content_stream(
+            model=self._model,
+            contents=prompt,
+            config=types.GenerateContentConfig(temperature=0),
+        )
+
+
 @st.cache_resource(show_spinner="Loading LLM...")
 def load_llm():
-    from langchain_google_genai import ChatGoogleGenerativeAI
+    from google import genai
     api_key = os.getenv("GOOGLE_API_KEY")
     if not api_key or api_key == "your_google_api_key_here":
         return None
-    return ChatGoogleGenerativeAI(
-        model="gemini-2.5-flash-lite-preview-06-17",
-        temperature=0,
-        google_api_key=api_key,
-    )
+    client = genai.Client(api_key=api_key)
+    return _GeminiClient(client, "gemini-2.5-flash-lite")
 
 
 # ── Load resources ────────────────────────────────────────────────────────────

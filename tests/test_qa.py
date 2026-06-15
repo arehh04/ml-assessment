@@ -1,14 +1,13 @@
 import pytest
 from unittest.mock import MagicMock
 from langchain_core.documents import Document
-from langchain_core.messages import AIMessage
 from src.qa import answer_question, format_sources
 
 
 @pytest.fixture
 def mock_llm():
     llm = MagicMock()
-    llm.invoke.return_value = AIMessage(content="AI governance refers to frameworks and policies.")
+    llm.generate_content.return_value = MagicMock(text="AI governance refers to frameworks and policies.")
     return llm
 
 
@@ -79,7 +78,7 @@ def test_format_sources():
 
 def test_answer_question_calls_llm(mock_llm, retrieved_docs):
     answer_question("test query", retrieved_docs, mock_llm)
-    assert mock_llm.invoke.called
+    assert mock_llm.generate_content.called
 
 
 def test_format_sources_missing_metadata():

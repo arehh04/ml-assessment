@@ -4,7 +4,7 @@ from langchain_core.documents import Document
 from src.retriever import dense_retrieve, sparse_retrieve, mmr_retrieve
 from src.fusion import reciprocal_rank_fusion, apply_mmr
 from src.qa import answer_question
-from src.prompt import build_prompt, format_context
+from src.prompt import format_context, format_prompt
 
 FALLBACK_PHRASE = "cannot find sufficient evidence"
 
@@ -36,8 +36,7 @@ def full_pipeline_retrieve(
 
 
 def stream_answer(question: str, docs: list[Document], llm):
-    prompt = build_prompt()
     context = format_context(docs)
-    messages = prompt.format_messages(context=context, question=question)
-    for chunk in llm.stream(messages):
-        yield chunk.content
+    prompt_text = format_prompt(context, question)
+    for chunk in llm.generate_content_stream(prompt_text):
+        yield chunk.text
