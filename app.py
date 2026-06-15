@@ -138,8 +138,11 @@ with right_col:
             bm25_results = [None, None, None]
             for future in as_completed(bm25_futures):
                 idx = bm25_futures[future]
-                bm25_results[idx] = future.result()
+                try:
+                    bm25_results[idx] = future.result()
+                except Exception as exc:
+                    bm25_results[idx] = {"answer": f"{FALLBACK_PHRASE} (retrieval error: {exc})", "sources": []}
 
         for i, res in enumerate(bm25_results):
             badge_slots[i].markdown("⚡ **BM25 preview**")
-            preview_slots[i].markdown(res["answer"])
+            preview_slots[i].markdown(res["answer"] if res else f"⚠️ {FALLBACK_PHRASE}")
