@@ -1,4 +1,4 @@
-# ML Engineer Assessment — RAG System for AI Governance Documents
+RAG System for AI Governance Documents
 
 A Retrieval-Augmented Generation (RAG) system that answers questions over a corpus of AI governance documents. Retrieves relevant passages using hybrid search, fuses results with Reciprocal Rank Fusion, and generates grounded answers with source citations using Gemini 2.5 Flash.
 
